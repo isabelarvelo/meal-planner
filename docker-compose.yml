@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./src:/app/src
+    environment:
+      - MEAL_PLANNER_ENVIRONMENT=development
+      - MEAL_PLANNER_DEBUG=true
+      - MEAL_PLANNER_DATA_DIR=/app/data
+      - MEAL_PLANNER_API_PORT=8000
+    depends_on:
+      - ollama
+    networks:
+      - meal-planner-network
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - meal-planner-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+networks:
+  meal-planner-network:
+    driver: bridge
+
+volumes:
+  ollama-data:
+    driver: local
