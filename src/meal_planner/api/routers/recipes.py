@@ -107,9 +107,41 @@ async def create_recipe(
     return recipe
 
 
+# IMPORTANT: Put specific routes BEFORE parameterized routes
+@router.get("/recipes/search", response_model=List[Recipe])
+async def search_recipes(
+    query: str = Query(..., min_length=1, description="Search query"),
+    limit: int = Query(20, ge=1, le=100),
+    storage_service: RecipeStorageService = Depends(get_storage_service)
+):
+    """Search recipes.
+    
+    Args:
+        query: Search query
+        limit: Maximum number of recipes to return
+        storage_service: Recipe storage service
+        
+    Returns:
+        List of matching recipes
+    """
+    return storage_service.search_recipes(query=query, limit=limit)
+
+
+@router.post("/recipes/extract")
+async def extract_recipe():
+    """Extract a recipe from an image or document - not implemented yet."""
+    raise HTTPException(status_code=501, detail="Recipe extraction not implemented yet")
+
+
+@router.post("/recipes/{recipe_id}/analyze-nutrition")
+async def analyze_recipe_nutrition():
+    """Analyze nutrition information for a recipe - not implemented yet."""
+    raise HTTPException(status_code=501, detail="Nutrition analysis not implemented yet")
+
+
 @router.get("/recipes", response_model=List[Recipe])
 async def list_recipes(
-    limit: int = Query(20, ge=1, le=100),
+    limit: int = Query(100, ge=1, le=100),
     offset: int = Query(0, ge=0),
     storage_service: RecipeStorageService = Depends(get_storage_service)
 ):
@@ -203,34 +235,3 @@ async def delete_recipe(
         raise HTTPException(status_code=404, detail="Recipe not found")
     
     return {"message": "Recipe deleted successfully"}
-
-
-@router.get("/recipes/search", response_model=List[Recipe])
-async def search_recipes(
-    query: str = Query(..., min_length=1, description="Search query"),
-    limit: int = Query(20, ge=1, le=100),
-    storage_service: RecipeStorageService = Depends(get_storage_service)
-):
-    """Search recipes.
-    
-    Args:
-        query: Search query
-        limit: Maximum number of recipes to return
-        storage_service: Recipe storage service
-        
-    Returns:
-        List of matching recipes
-    """
-    return storage_service.search_recipes(query=query, limit=limit)
-
-
-@router.post("/recipes/extract")
-async def extract_recipe():
-    """Extract a recipe from an image or document - not implemented yet."""
-    raise HTTPException(status_code=501, detail="Recipe extraction not implemented yet")
-
-
-@router.post("/recipes/{recipe_id}/analyze-nutrition")
-async def analyze_recipe_nutrition():
-    """Analyze nutrition information for a recipe - not implemented yet."""
-    raise HTTPException(status_code=501, detail="Nutrition analysis not implemented yet")
